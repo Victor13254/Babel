@@ -1,0 +1,44 @@
+# --- IntelliJ / JetBrains ---
+.idea/
+*.iml
+
+# --- Python / Backend ---
+backend/__pycache__/
+backend/**/*.pyc
+backend/**/*.pyo
+backend/**/*.pyd
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.coverage
+backend/venv/
+backend/env/
+backend/.env            # Variables de entorno sensibles
+
+# Alembic (excepto las migraciones que sí quieras subir)
+backend/alembic.ini
+backend/migrations/versions/__pycache__/
+
+# --- Node / Frontend ---
+frontend/node_modules/
+frontend/dist/
+frontend/.env            # Variables de entorno del frontend
+frontend/.eslintcache
+
+# --- Docker ---
+**/dbdata/
+**/frontend_build/
+.docker/
+docker-compose.override.yml
+
+# --- Logs ---
+*.log
+logs/
+backend/logs/
+frontend/logs/
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Others ---
+*.sqlite3
