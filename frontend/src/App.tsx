@@ -1,35 +1,58 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [health, setHealth] = useState('...')
+    const [email, setEmail] = useState('')
+    const [password, setPassword] = useState('')
+    const [token, setToken] = useState('')
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+
+    useEffect(() => {
+        fetch('/api/health')
+            .then(r => r.json())
+            .then(d => setHealth(d.status))
+            .catch(() => setHealth('error'))
+    }, [])
+
+
+    const register = async () => {
+        await fetch('/api/users/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email, password })
+        })
+    }
+
+
+    const login = async () => {
+        const form = new URLSearchParams()
+        form.append('username', email)
+        form.append('password', password)
+        const res = await fetch('/api/users/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: form.toString()
+        })
+        const data = await res.json()
+        setToken(data.access_token || '')
+    }
+
+
+    return (
+        <div>
+            <h1>Babel</h1>
+            <p>API health: {health}</p>
+            <div>
+                <input placeholder="email" value={email} onChange={e=>setEmail(e.target.value)} />
+                <input placeholder="password" type="password" value={password} onChange={e=>setPassword(e.target.value)} />
+                <button onClick={register}>Register</button>
+                <button onClick={login}>Login</button>
+            </div>
+            <p>Token: {token ? token.slice(0, 20) + '...' : '(no login)'}</p>
+        </div>
+    )
 }
+
 
 export default App

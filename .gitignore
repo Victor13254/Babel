@@ -1,7 +1,7 @@
 # --- IntelliJ / JetBrains ---
 .idea/
 *.iml
-
+.env
 # --- Python / Backend ---
 backend/__pycache__/
 backend/**/*.pyc
