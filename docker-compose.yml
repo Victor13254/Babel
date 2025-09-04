@@ -73,6 +73,12 @@ services:
 
   backup:
     build: ./docker/backup
+    environment:
+      HOST: db
+      PORT: 5432
+      USER: ${POSTGRES_USER}
+      PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE: ${POSTGRES_DB}
     env_file:
       - .env
     depends_on:

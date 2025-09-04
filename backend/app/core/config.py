@@ -1,6 +1,9 @@
 from pydantic import BaseSettings, AnyHttpUrl
 from typing import List
+from pathlib import Path
 
+ROOT_DIR = Path(__file__).resolve().parents[3]  # .../Babel
+ENV_FILE = ROOT_DIR / ".env"
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Babel"
@@ -35,9 +38,11 @@ class Settings(BaseSettings):
     S3_REGION: str = "us-east-1"
     S3_USE_SSL: bool = False
 
+    ADMIN_EMAIL: str = "admin@babel.local"
+    ADMIN_PASSWORD: str = "admin"
 
     class Config:
-        env_file = ".env"
+        env_file = str(ENV_FILE)
 
 
 settings = Settings()
