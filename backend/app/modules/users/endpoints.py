@@ -1,45 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from jose import jwt, JWTError
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 from app.core.rate_limit import rate_limit
 
-from app.core.config import settings
 from app.core.security import create_access_token
 from app.core.deps import get_db
 from app.modules.users.schemas import UserCreate, UserOut
 from app.modules.users.crud import crud_user
 from app.modules.auth.schemas import Token
-
+from app.core.rbac import requires
+from app.core.auth import get_current_user, require_admin
 router = APIRouter(prefix="/users", tags=["users"])
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/users/login")
-
-def get_current_user(
-        db: Session = Depends(get_db),
-        token: str = Depends(oauth2_scheme),
-):
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
-        email: str | None = payload.get("sub")
-        if not email:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token payload",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except JWTError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-
-    user = crud_user.get_by_email(db, email=email)
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
 
 @router.post("/register", response_model=UserOut, status_code = 201)
 def register_user(payload: UserCreate, db: Session = Depends(get_db)):
@@ -71,6 +43,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     token = create_access_token(subject=user.email)
     return {"access_token": token, "token_type": "bearer"}
 
-@router.get("/me", status_code = 200,response_model=UserOut)
+@router.get("/me", status_code = 200,response_model=UserOut, dependencies=[Depends(requires("users:me"))])
 def read_me(current_user=Depends(get_current_user)):
     return current_user
+
+@router.get("/admin-test", dependencies=[Depends(requires("users:admin"))])
+def admin_only(_=Depends(require_admin)):
+    return {"ok": True, "msg": "Solo admin"}

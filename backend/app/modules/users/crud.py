@@ -3,18 +3,28 @@ from sqlalchemy.exc import IntegrityError
 from app.modules.users.models import User
 from app.modules.users.schemas import UserCreate
 from app.core.security import get_password_hash, verify_password
+from app.modules.profiles.models import Profile
+
+DEFAULT_AVATAR_URL= "https://img.freepik.com/vector-gratis/circulo-azul-usuario-blanco_78370-4707.jpg"
 
 class UserCRUD:
     def create(self, db: Session, obj_in: UserCreate) -> User:
 
         user = User(
-            email=obj_in.email.strip().lower(),
+            email=str(obj_in.email).strip().lower(),
             hashed_password=get_password_hash(obj_in.password),
         )
 
         db.add(user)
-
         try:
+            db.flush()
+            prof = Profile(
+                user_id=user.id,
+                display_name=user.email,
+                avatar_url=DEFAULT_AVATAR_URL,
+                preferences={}
+            )
+            db.add(prof)
             db.commit()
         except IntegrityError:
             db.rollback()

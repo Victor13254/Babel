@@ -1,5 +1,5 @@
 from pydantic import BaseSettings, AnyHttpUrl
-from typing import List
+from typing import List, Optional
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[3]  # .../Babel
@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     S3_BUCKET: str
     S3_REGION: str = "us-east-1"
     S3_USE_SSL: bool = False
+    S3_PUBLIC_BASE_URL: Optional[str] = None
+    S3_PRESIGN_EXPIRES: int = 900
 
     ADMIN_EMAIL: str = "admin@babel.local"
     ADMIN_PASSWORD: str = "admin"
