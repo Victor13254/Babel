@@ -1,0 +1,219 @@
+/* ===== Fondo del login reutilizando tu hero-bg ===== */
+.auth-bg {
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+}
+
+/* ===== Contenedor principal ===== */
+.auth-container {
+    width: 100%;
+    max-width: 900px;
+    display: grid;
+    gap: 1.75rem;
+    z-index: 1;
+}
+
+/* Header superior (BABEL + subtítulo) */
+.auth-header {
+    text-align: center;
+}
+
+/* ===== Tarjeta con borde brillante animado ===== */
+.glow-card {
+    position: relative;
+    border-radius: 20px;
+    padding: 2px; /* borde exterior */
+    background:
+            linear-gradient(135deg,
+            color-mix(in oklab, var(--electric-light-color) 60%, transparent),
+            color-mix(in oklab, var(--electric-border-color) 60%, transparent),
+            transparent 60%),
+            linear-gradient(var(--color-neutral-900), var(--color-neutral-900));
+    overflow: hidden;
+    isolation: isolate;
+}
+
+/* Borde animado “eléctrico” */
+.glow-border {
+    position: absolute;
+    inset: -2px;
+    background:
+            conic-gradient(from 0deg,
+            color-mix(in oklab, var(--electric-border-color) 80%, transparent),
+            color-mix(in oklab, var(--electric-light-color) 60%, transparent),
+            color-mix(in oklab, var(--electric-border-color) 80%, transparent));
+    filter: blur(14px);
+    opacity: 0.6;
+    animation: spin-outer 10s linear infinite;
+    z-index: -1;
+}
+@keyframes spin-outer { to { transform: rotate(360deg); } }
+
+/* Sheen/relámpago suave pasando por encima */
+.glow-sheen {
+    position: absolute;
+    inset: -50%;
+    background: radial-gradient(40% 20% at 20% 50%,
+    color-mix(in oklab, var(--electric-light-color) 40%, transparent) 0%,
+    transparent 70%);
+    transform: rotate(-12deg);
+    filter: blur(30px);
+    animation: sweep 8s ease-in-out infinite;
+    opacity: .45;
+    z-index: 0;
+}
+@keyframes sweep {
+    0%,100% { transform: translateX(-10%) rotate(-12deg); }
+    50%     { transform: translateX(20%) rotate(-12deg); }
+}
+
+/* ===== Formulario (panel interior) ===== */
+.auth-form {
+    position: relative;
+    z-index: 1;
+    border-radius: 18px;
+    padding: 2rem;
+    background:
+            radial-gradient(47% 60% at 50% 0%,
+            rgba(255,255,255,0.05), transparent 70%),
+            rgba(255,255,255,0.03);
+    backdrop-filter: blur(6px);
+    display: grid;
+    gap: 1rem;
+}
+
+.auth-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: .25rem;
+}
+
+/* Campos */
+.auth-field {
+    display: grid;
+    gap: .35rem;
+}
+.auth-field > span {
+    font-size: .85rem;
+    opacity: .8;
+}
+.auth-field input {
+    width: 100%;
+    padding: .8rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid color-mix(in oklab, var(--electric-border-color) 35%, transparent);
+    background: oklch(0.18 0 0 / .7);
+    color: oklch(0.985 0 0);
+    outline: none;
+    transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.auth-field input::placeholder { color: oklch(0.85 0 0 / .6); }
+.auth-field input:focus {
+    border-color: var(--electric-border-color);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--electric-border-color) 30%, transparent);
+    background: oklch(0.2 0 0 / .85);
+}
+
+/* Password con toggle */
+.pwd-wrap {
+    position: relative;
+    display: grid;
+}
+.pwd-toggle {
+    position: absolute;
+    right: .4rem;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: transparent;
+    color: oklch(0.95 0 0 / .8);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: .25rem .45rem;
+    border-radius: 8px;
+}
+.pwd-toggle:hover {
+    background: oklch(0.3 0 0 / .35);
+}
+
+/* Acciones */
+.auth-actions {
+    display: flex;
+    gap: .75rem;
+    justify-content: flex-end;
+    margin-top: .5rem;
+}
+
+/* Botones */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .75rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.btn.ghost {
+    background: transparent;
+    color: oklch(0.95 0 0 / .9);
+    border-color: oklch(0.5 0 0 / .35);
+}
+.btn.ghost:hover {
+    background: oklch(0.25 0 0 / .5);
+}
+
+.btn.glow {
+    background: linear-gradient(90deg,
+    color-mix(in oklab, var(--electric-border-color) 60%, transparent),
+    color-mix(in oklab, var(--electric-light-color) 60%, transparent));
+    color: oklch(0.1 0 0);
+    box-shadow:
+            0 8px 24px color-mix(in oklab, var(--electric-border-color) 35%, transparent),
+            inset 0 1px 0 rgba(255,255,255,.25);
+}
+.btn.glow:hover {
+    transform: translateY(-1px);
+    box-shadow:
+            0 10px 28px color-mix(in oklab, var(--electric-border-color) 45%, transparent),
+            inset 0 1px 0 rgba(255,255,255,.3);
+}
+.btn.glow:disabled {
+    opacity: .6;
+    cursor: not-allowed;
+}
+
+/* Mensajes */
+.auth-msg {
+    margin-top: .25rem;
+    font-size: .9rem;
+    color: #ffb4b4;
+}
+
+/* Alternativa */
+.auth-alt {
+    margin-top: .25rem;
+    text-align: center;
+    font-size: .95rem;
+}
+.auth-alt a {
+    color: color-mix(in oklab, var(--electric-light-color) 70%, white);
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+/* Responsive */
+@media (min-width: 640px) {
+    .auth-form { padding: 2.25rem; }
+}
+@media (min-width: 768px) {
+    .auth-container { gap: 2rem; }
+    .auth-form { padding: 2.5rem; }
+}

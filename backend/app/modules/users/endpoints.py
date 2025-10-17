@@ -6,29 +6,24 @@ from app.core.rate_limit import rate_limit
 
 from app.core.security import create_access_token
 from app.core.deps import get_db
-from app.modules.users.schemas import UserCreate, UserOut
+from app.modules.users.schemas import RegisterFull, UserOut
 from app.modules.users.crud import crud_user
 from app.modules.auth.schemas import Token
 from app.core.rbac import requires
 from app.core.auth import get_current_user, require_admin
 router = APIRouter(prefix="/users", tags=["users"])
 
-@router.post("/register", response_model=UserOut, status_code = 201)
-def register_user(payload: UserCreate, db: Session = Depends(get_db)):
+
+@router.post("/register", response_model=UserOut, status_code=201)
+def register_user(payload: RegisterFull, db: Session = Depends(get_db)):
     existing = crud_user.get_by_email(db, payload.email)
     if existing:
-        raise HTTPException(
-            status_code= 409,
-            detail="El email ya está registrado."
-        )
-    try:
-        user = crud_user.create(db, payload)
-    except IntegrityError:
+        raise HTTPException(status_code=409, detail="El email ya está registrado.")
 
-        raise HTTPException(
-            status_code= 409,
-            detail="El email ya está registrado.",
-        )
+    try:
+        user = crud_user.create_with_profile(db, payload)
+    except IntegrityError:
+        raise HTTPException(status_code=409, detail="El email ya está registrado.")
     return user
 
 @router.post("/login", response_model=Token,dependencies=[Depends(rate_limit)])

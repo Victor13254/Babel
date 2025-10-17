@@ -19,17 +19,34 @@ export async function loginApi(email: string, password: string) {
     return data.access_token;
 }
 
-export async function registerApi(email: string, password: string) {
+// api.ts
+export type RegisterFullPayload = {
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    username: string;
+    age: number;
+    country: string;
+    native_lang: string;
+    target_lang: string;
+    level: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+    daily_goal_min: number;
+    accept_terms?: boolean; // opcional; si tu backend no lo usa, lo ignora
+};
+
+export async function registerApi(payload: RegisterFullPayload) {
     const res = await fetch(`${Api}/users/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
     });
-    if (res.status === 409) throw new Error('El email ya está registrado');
-    if (res.status === 422) throw new Error('Datos inválidos');
+    if (res.status === 409) throw new Error("El email ya está registrado");
+    if (res.status === 422) throw new Error("Datos inválidos");
     if (!res.ok) throw new Error(`Error ${res.status}`);
     return (await res.json()) as { id: number; email: string };
 }
+
 
 export async function meApi(token: string) {
     const res = await fetch(`${Api}/users/me`, { headers: { Authorization: `Bearer ${token}` } });
