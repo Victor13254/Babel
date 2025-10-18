@@ -1,0 +1,131 @@
+/* Layout general */
+.admin-bg {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: 4rem 1rem;
+    overflow-y: auto;
+}
+
+.admin-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+}
+
+.admin-header { text-align: center; margin-bottom: .5rem; }
+
+/* KPIs */
+.grid-kpis {
+    display: grid;
+    gap: 1rem;
+}
+@media (min-width: 640px) { .grid-kpis { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .grid-kpis { grid-template-columns: repeat(6, 1fr); } }
+
+.kpi-card {
+    position: relative;
+    padding: 2px;
+    border-radius: 16px;
+    isolation: isolate;
+    background:
+            linear-gradient(135deg,
+            color-mix(in oklab, var(--electric-light-color) 60%, transparent),
+            color-mix(in oklab, var(--electric-border-color) 60%, transparent),
+            transparent 60%),
+            linear-gradient(var(--color-neutral-900), var(--color-neutral-900));
+}
+.kpi-inner {
+    border-radius: 14px;
+    padding: 1rem;
+    background:
+            radial-gradient(47% 60% at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+            rgba(255,255,255,0.03);
+    backdrop-filter: blur(6px);
+    display: grid;
+    gap: .25rem;
+    min-height: 100px;
+    align-content: center;
+}
+.kpi-title { font-size: .9rem; opacity: .8; }
+.kpi-value { font-size: 1.75rem; font-weight: 800; letter-spacing: .5px; }
+
+.kpi-skeleton {
+    display: block;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(90deg,
+    rgba(255,255,255,.08), rgba(255,255,255,.02), rgba(255,255,255,.08));
+    animation: shimmer 1.5s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% 0; } }
+
+/* Tarjeta de cursos */
+.courses-card { position: relative; overflow: hidden; }
+.courses-card .courses-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1rem 0 1rem;
+}
+.courses-card h2 { font-size: 1.1rem; }
+
+.courses-body { padding: 1rem; display: grid; gap: 1rem; }
+
+/* Barras */
+.bars { display: grid; gap: .75rem; }
+.bar-row { display: grid; gap: .5rem; }
+@media (min-width: 900px) {
+    .bar-row { grid-template-columns: 1.5fr 2fr 1fr; align-items: center; }
+}
+
+.bar-info { display: flex; flex-direction: column; gap: .15rem; }
+.bar-title { font-weight: 600; }
+.bar-meta { opacity: .7; font-size: .9rem; }
+
+.bar-track {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+    background: oklch(0.25 0 0 / .5);
+    overflow: hidden;
+}
+.bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: inherit;
+    background: linear-gradient(90deg,
+    color-mix(in oklab, var(--electric-border-color) 50%, transparent),
+    color-mix(in oklab, var(--electric-light-color) 80%, white));
+    box-shadow: 0 0 18px color-mix(in oklab, var(--electric-light-color) 40%, transparent);
+    transition: width .4s ease;
+}
+.bar-nums {
+    display: grid; grid-auto-flow: column; gap: .75rem; justify-content: end;
+    font-size: .9rem; opacity: .9;
+}
+.bar-nums .rate { font-weight: 700; }
+
+/* Tabla */
+.table-wrap { overflow-x: auto; }
+.electric-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .95rem;
+}
+.electric-table th, .electric-table td {
+    padding: .6rem .75rem;
+    border-bottom: 1px solid oklch(0.5 0 0 / .15);
+}
+.electric-table thead th {
+    text-align: left; opacity: .8; font-weight: 600;
+}
+.td-title { font-weight: 600; }
+.muted { opacity: .7; }
+
+/* Hints */
+.hint.error {
+    font-size: .85rem;
+    color: #ffb4b4;
+    opacity: .9;
+}

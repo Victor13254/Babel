@@ -1,9 +1,9 @@
+/* Reutiliza tu hero-bg / auth-bg del Login */
 .auth-bg {
-    position: relative;
-    z-index: 1;                   /* encima del fondo */
-    min-height: 100vh;            /* ocupa alto completo si es pequeño */
-    padding: 4rem 1rem;
-    overflow-y: auto;             /* ⬅️ permite desplazamiento vertical */
+    display: grid;
+    place-items: center;
+    padding: 2rem 1rem;
+    min-height: 100vh;
 }
 
 .auth-container {
