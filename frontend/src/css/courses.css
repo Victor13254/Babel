@@ -1,0 +1,144 @@
+/* ===== Layout general ===== */
+.cstack-bg {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    padding: 3rem 1rem;
+    overflow-y: auto;   /* puedes scrollear hacia abajo */
+    overflow-x: hidden;
+}
+
+.cstack-wrap {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    gap: 1rem;
+}
+
+.page-title {
+    font-size: clamp(1.5rem, 2.2vw, 2rem);
+    font-weight: 800;
+    letter-spacing: .5px;
+    margin-bottom: .25rem;
+}
+.muted { opacity: .75; }
+.hint.error { color: #ffb4b4; }
+
+/* ===== Tarjeta escalonada (tema eléctrico) ===== */
+.step-card {
+    border-radius: 18px;
+    padding: 2px;
+    background:
+            linear-gradient(135deg,
+            color-mix(in oklab, var(--electric-light-color) 60%, transparent),
+            color-mix(in oklab, var(--electric-border-color) 60%, transparent),
+            transparent 60%),
+            linear-gradient(var(--color-neutral-900), var(--color-neutral-900));
+    overflow: hidden;
+    isolation: isolate;
+    transition: max-height .28s ease, opacity .22s ease, transform .22s ease;
+}
+
+/* Estados */
+.step-card.is-hidden {
+    max-height: 0;
+    opacity: 0;
+    padding: 0;           /* evita “picos” cuando está oculto */
+    pointer-events: none;
+}
+.step-card.is-minimized {
+    max-height: 70px;     /* altura de header */
+    opacity: .9;
+    cursor: pointer;
+}
+.step-card.is-expanded {
+    max-height: 1000vh;   /* grande para contenido variable */
+}
+
+/* Interior */
+.step-header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: .75rem;
+    padding: .9rem 1rem;
+    border-bottom: 1px solid oklch(0.5 0 0 / .15);
+    background:
+            radial-gradient(40% 40% at 10% 0%, rgba(255,255,255,0.06), transparent 70%),
+            rgba(255,255,255,0.03);
+}
+.step-header:hover { background: oklch(0.22 0 0 / .35); }
+.step-title { font-weight: 700; display: flex; gap: .5rem; align-items: center; }
+.step-badge {
+    display: inline-grid; place-items: center;
+    width: 22px; height: 22px; border-radius: 999px;
+    font-size: .85rem; font-weight: 800;
+    color: oklch(0.1 0 0);
+    background: linear-gradient(90deg,
+    color-mix(in oklab, var(--electric-border-color) 60%, transparent),
+    color-mix(in oklab, var(--electric-light-color) 60%, transparent));
+    box-shadow: 0 0 14px color-mix(in oklab, var(--electric-light-color) 35%, transparent);
+}
+.step-selected { font-size: .9rem; }
+
+.step-body {
+    padding: 1rem;
+    background:
+            radial-gradient(47% 60% at 50% 0%, rgba(255,255,255,0.05), transparent 70%),
+            rgba(255,255,255,0.03);
+    backdrop-filter: blur(6px);
+}
+
+/* Listas */
+.list { list-style: none; display: grid; gap: .5rem; padding: 0; margin: 0; }
+.list-item {
+    width: 100%;
+    text-align: left;
+    border-radius: 12px;
+    padding: .75rem .9rem;
+    border: 1px solid color-mix(in oklab, var(--electric-border-color) 25%, transparent);
+    background: oklch(0.18 0 0 / .6);
+    color: inherit;
+    cursor: pointer;
+    transition: transform .12s ease, border-color .15s ease, background .15s ease;
+}
+.list-item:hover {
+    transform: translateY(-1px);
+    border-color: var(--electric-border-color);
+    background: oklch(0.22 0 0 / .6);
+}
+.list-item.active {
+    border-color: var(--electric-border-color);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--electric-border-color) 28%, transparent);
+}
+.li-title { font-weight: 700; }
+.li-meta { font-size: .9rem; }
+
+/* Skeletons */
+.skeleton-list { display: grid; gap: .5rem; }
+.skl-row {
+    height: 38px; border-radius: 10px;
+    background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.02), rgba(255,255,255,.08));
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% 0; } }
+
+/* Bloques */
+.blocks { display: grid; gap: .75rem; }
+.block {
+    border: 1px solid oklch(0.5 0 0 / .15);
+    border-radius: 12px;
+    padding: .75rem .9rem;
+    background: oklch(0.18 0 0 / .6);
+}
+.block-head {
+    display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem;
+}
+.b-chip {
+    padding: .1rem .5rem; border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--electric-border-color) 35%, transparent);
+    font-size: .8rem;
+}
+.b-type { font-weight: 700; }
+.block-body img { max-width: 100%; border-radius: 8px; display: block; }
+.block-body video { max-width: 100%; border-radius: 8px; display: block; }

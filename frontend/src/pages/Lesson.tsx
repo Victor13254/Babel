@@ -56,9 +56,9 @@ export default function Lesson() {
                 {blocks.map(b => (
                     <div key={b.id} style={{ padding: 8, border: '1px solid #ddd', marginBottom: 8 }}>
                         <strong>{b.type.toUpperCase()}</strong>
-                        {b.type === 'text' && <p>{b.content?.text}</p>}
-                        {b.type === 'audio' && <audio controls src={b.content?.url} />}
-                        {b.type === 'video' && <video controls width={360} src={b.content?.url} />}
+                        {b.type === 'text' && <p>{b.text}</p>}
+                        {b.type === 'audio' && <audio controls src={b.media?.url} />}
+                        {b.type === 'video' && <video controls width={360} src={b.media?.url} />}
                     </div>
                 ))}
             </section>

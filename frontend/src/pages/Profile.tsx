@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { endpoints, type Profile } from '../api';
 import { useApi } from '../hooks/useApi';
 import {useAuth} from "../auth.tsx";
+import '../css/profile.css';
 
 type Editable = Omit<Profile, 'user_id'>;
 
@@ -73,92 +74,107 @@ export default function ProfilePage() {
     if (loading && !profile) return <div style={{ padding: 24 }}>Cargando perfil…</div>;
 
     return (
-        <div style={{ maxWidth: 640, margin: '2rem auto', fontFamily: 'system-ui, sans-serif' }}>
-            <h2>Mi Perfil</h2>
-            {msg && <p style={{ color: msg.startsWith('✅') ? 'green' : 'crimson' }}>{msg}</p>}
+        <div className="profile-bg">
+            <div className="profile-wrap">
+                <h2 className="page-title">Mi Perfil</h2>
+                {msg && (
+                    <p className={`msg ${msg.startsWith('✅') ? 'ok' : 'bad'}`}>{msg}</p>
+                )}
 
-            {!profile ? (
-                <p>No se pudo cargar el perfil.</p>
-            ) : edit ? (
-                // MODO EDICIÓN
-                <div style={{ display: 'grid', gap: 8 }}>
-                    <label>
-                        <div>Nombre visible</div>
-                        <input
-                            value={edit.display_name ?? ''}
-                            onChange={e => setEdit({ ...(edit as Editable), display_name: e.target.value })}
-                        />
-                    </label>
-                    <label>
-                        <div>Idioma nativo (es,en,fr…)</div>
-                        <input
-                            value={edit.native_lang ?? ''}
-                            onChange={e => setEdit({ ...(edit as Editable), native_lang: e.target.value })}
-                        />
-                    </label>
-                    <label>
-                        <div>Idioma objetivo (es,en,fr…)</div>
-                        <input
-                            value={edit.target_lang ?? ''}
-                            onChange={e => setEdit({ ...(edit as Editable), target_lang: e.target.value })}
-                        />
-                    </label>
-                    <label>
-                        <div>Nivel (A1..C2)</div>
-                        <input
-                            value={edit.target_level ?? ''}
-                            onChange={e => setEdit({ ...(edit as Editable), target_level: e.target.value })}
-                        />
-                    </label>
-                    <label>
-                        <div>Avatar URL (opcional)</div>
-                        <input
-                            value={edit.avatar_url ?? ''}
-                            onChange={e => setEdit({ ...(edit as Editable), avatar_url: e.target.value })}
-                        />
-                    </label>
+                {!profile ? (
+                    <div className="e-card"><div className="e-inner">No se pudo cargar el perfil.</div></div>
+                ) : edit ? (
+                    /* ===== MODO EDICIÓN ===== */
+                    <div className="e-card">
+                        <div className="e-inner">
+                            <div className="edit-grid two-col">
+                                <div className="field">
+                                    <label>Nombre visible</label>
+                                    <input
+                                        className="input"
+                                        value={edit.display_name ?? ''}
+                                        onChange={e => setEdit({ ...(edit as Editable), display_name: e.target.value })}
+                                    />
+                                </div>
 
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                        <button onClick={onCancel} type="button">Cancelar</button>
-                        <button onClick={onSave} disabled={!isDirty || loading} type="button">
-                            {loading ? 'Guardando…' : 'Guardar'}
-                        </button>
-                    </div>
+                                <div className="field">
+                                    <label>Idioma nativo (es,en,fr…)</label>
+                                    <input
+                                        className="input"
+                                        value={edit.native_lang ?? ''}
+                                        onChange={e => setEdit({ ...(edit as Editable), native_lang: e.target.value })}
+                                    />
+                                </div>
 
-                    {!isDirty && <small style={{ opacity: 0.7 }}>No hay cambios</small>}
-                </div>
-            ) : (
-                // MODO LECTURA
-                <div style={{ display: 'grid', gap: 6 }}>
-                    <div><b>Email:</b> {me?.email} <i></i></div>
-                    <div><b>Nombre visible:</b> {profile.display_name || '—'}</div>
-                    <div><b>Nativo:</b> {profile.native_lang || '—'}</div>
-                    <div><b>Objetivo:</b> {profile.target_lang || '—'}</div>
-                    <div><b>Nivel:</b> {profile.target_level || '—'}</div>
-                    <div>
-                        <b>Avatar:</b>{" "}
-                        {profile.avatar_url ? (
-                            <img
-                                src={profile.avatar_url}
-                                alt="avatar"
-                                style={{
-                                    width: 64,
-                                    height: 64,
-                                    borderRadius: "50%",
-                                    objectFit: "cover",
-                                    verticalAlign: "middle",
-                                    marginLeft: 8,
-                                }}
-                            />
-                        ) : (
-                            "—"
-                        )}
+                                <div className="field">
+                                    <label>Idioma objetivo (es,en,fr…)</label>
+                                    <input
+                                        className="input"
+                                        value={edit.target_lang ?? ''}
+                                        onChange={e => setEdit({ ...(edit as Editable), target_lang: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="field">
+                                    <label>Nivel (A1..C2)</label>
+                                    <input
+                                        className="input"
+                                        value={edit.target_level ?? ''}
+                                        onChange={e => setEdit({ ...(edit as Editable), target_level: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="field span-2 avatar-edit">
+                                    <label>Avatar URL (opcional)</label>
+                                    <input
+                                        className="input"
+                                        value={edit.avatar_url ?? ''}
+                                        onChange={e => setEdit({ ...(edit as Editable), avatar_url: e.target.value })}
+                                        placeholder="https://…"
+                                    />
+                                    {edit.avatar_url && (
+                                        <img className="avatar-preview" src={edit.avatar_url} alt="preview avatar" />
+                                    )}
+                                    <span className="note">Pega una URL pública (ej. tu CDN). </span>
+                                </div>
+                            </div>
+
+                            <div className="actions">
+                                <button className="btn ghost" onClick={onCancel} type="button">Cancelar</button>
+                                <button className="btn glow" onClick={onSave} disabled={!isDirty || loading} type="button">
+                                    {loading ? 'Guardando…' : 'Guardar'}
+                                </button>
+                            </div>
+
+                            {!isDirty && <div className="note">No hay cambios</div>}
+                        </div>
                     </div>
-                    <div style={{ marginTop: 8 }}>
-                        <button onClick={onEdit}>Editar</button>
+                ) : (
+                    /* ===== MODO LECTURA ===== */
+                    <div className="e-card">
+                        <div className="e-inner">
+                            <div className="read-grid">
+                                <div className="read-row"><b>Email:</b> {me?.email}</div>
+                                <div className="read-row"><b>Nombre visible:</b> {profile.display_name || '—'}</div>
+                                <div className="read-row"><b>Nativo:</b> {profile.native_lang || '—'}</div>
+                                <div className="read-row"><b>Objetivo:</b> {profile.target_lang || '—'}</div>
+                                <div className="read-row"><b>Nivel:</b> {profile.target_level || '—'}</div>
+                                <div className="read-row read-avatar">
+                                    <b>Avatar:</b>
+                                    {profile.avatar_url ? (
+                                        <img src={profile.avatar_url} alt="avatar" />
+                                    ) : '—'}
+                                </div>
+
+                                <div className="actions">
+                                    <button className="btn glow" onClick={onEdit} type="button">Editar</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
+
 }

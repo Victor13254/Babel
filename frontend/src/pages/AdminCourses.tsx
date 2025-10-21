@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import {
     endpoints, adminEndpoints, mediaEndpoints,
@@ -6,6 +6,8 @@ import {
     type NewCourse, type NewModule, type NewLesson, type NewBlock,
     type Media,
 } from '../api';
+
+import '../css/adminCourses.css';
 
 export default function AdminCourses() {
     const { call } = useApi();
@@ -18,7 +20,7 @@ export default function AdminCourses() {
     const [mediaList, setMediaList] = useState<Media[]>([]);
     const [msg, setMsg] = useState('');
 
-    // selección
+    // selección (controla etapas)
     const [courseId, setCourseId] = useState<number | null>(null);
     const [moduleId, setModuleId] = useState<number | null>(null);
     const [lessonId, setLessonId] = useState<number | null>(null);
@@ -29,9 +31,15 @@ export default function AdminCourses() {
     const [lForm, setLForm] = useState<NewLesson>({ module_id: 0, title: '', position: 1, summary: '' });
     const [bForm, setBForm] = useState<NewBlock>({ lesson_id: 0, type: 'text', position: 1, text: '' });
 
-    // subida de media ad-hoc para bloque
+    // media
     const [uploading, setUploading] = useState(false);
     const [uploaded, setUploaded] = useState<Media | null>(null);
+
+    // refs para scroll a la activa
+    const card1Ref = useRef<HTMLElement | null>(null);
+    const card2Ref = useRef<HTMLElement | null>(null);
+    const card3Ref = useRef<HTMLElement | null>(null);
+    const card4Ref = useRef<HTMLElement | null>(null);
 
     // cargar catálogos base
     useEffect(() => {
@@ -61,6 +69,30 @@ export default function AdminCourses() {
             setBlocks(data);
         } catch (e: any) { setMsg(e.message); }
     };
+    // justo debajo de los useState y antes de los selects/creates
+    const goToStep = (step: 1 | 2 | 3) => {
+        if (step === 1) {
+            // volver al inicio: ocultar 2,3,4
+            setCourseId(null);
+            setModuleId(null);
+            setLessonId(null);
+            setLessons([]);
+            setBlocks([]);
+            setUploaded(null);
+        } else if (step === 2) {
+            // mostrar tarjeta 2: mantener curso, limpiar 3 y 4
+            setModuleId(null);
+            setLessonId(null);
+            setLessons([]);
+            setBlocks([]);
+            setUploaded(null);
+        } else if (step === 3) {
+            // mostrar tarjeta 3: mantener curso y módulo, limpiar 4
+            setLessonId(null);
+            setBlocks([]);
+            setUploaded(null);
+        }
+    };
 
     // seleccionar
     const selectCourse = async (id: number) => {
@@ -73,6 +105,7 @@ export default function AdminCourses() {
         await loadModules(id);
         setMForm({ course_id: id, title: '', position: (modules?.length || 0) + 1 });
     };
+
     const selectModule = async (id: number) => {
         setModuleId(id);
         setLessonId(null);
@@ -81,6 +114,7 @@ export default function AdminCourses() {
         await loadLessons(id);
         setLForm({ module_id: id, title: '', position: (lessons?.length || 0) + 1, summary: '' });
     };
+
     const selectLesson = async (id: number) => {
         setLessonId(id);
         await loadBlocks(id);
@@ -143,21 +177,19 @@ export default function AdminCourses() {
                 if (!mediaId) throw new Error('Sube o selecciona un media primero');
                 payload.media_id = mediaId;
             }
-            console.log('payload blocks:', payload);
             const created = await call<Block>(adminEndpoints.createBlock(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
             });
             setBlocks(prev => [...prev, created]);
-            // siguiente posición y reset de form
             setBForm({ lesson_id: lessonId, type: 'text', position: (blocks?.length || 0) + 2, text: '' });
             setUploaded(null);
             setMsg('✅ Bloque creado');
         } catch (e: any) { setMsg(String(e.message || e)); }
     };
 
-    // subir archivo a /media/upload (usa useApi para adjuntar Authorization automáticamente)
+    // subir media
     const onUploadFile = async (file?: File | null) => {
         if (!file) return;
         try {
@@ -166,10 +198,9 @@ export default function AdminCourses() {
             form.append('file', file);
             const media = await call<Media>(mediaEndpoints.upload(), {
                 method: 'POST',
-                body: form, // NO pongas Content-Type; el navegador lo establece
+                body: form,
             });
             setUploaded(media);
-            // refrescar lista para que aparezca seleccionable también
             setMediaList(prev => [media, ...prev]);
             setMsg('✅ Media subido');
         } catch (e: any) {
@@ -179,191 +210,305 @@ export default function AdminCourses() {
         }
     };
 
-    const selectedCourse = useMemo(() => courses.find(c => c.id === courseId) || null, [courses, courseId]);
+    const selectedCourse = useMemo(
+        () => courses.find(c => c.id === courseId) || null,
+        [courses, courseId]
+    );
+
+    // ===== Etapa activa (1..4)
+    const activeStep =
+        lessonId ? 4 :
+            moduleId ? 3 :
+                courseId ? 2 : 1;
+
+    // Scroll a la tarjeta activa cuando cambia
+    useEffect(() => {
+        const el =
+            activeStep === 1 ? card1Ref.current :
+                activeStep === 2 ? card2Ref.current :
+                    activeStep === 3 ? card3Ref.current :
+                        card4Ref.current;
+
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, [activeStep]);
 
     return (
-        <div style={{ fontFamily: 'system-ui, sans-serif' }}>
-            <div style={{ maxWidth: 1200, margin: '1.5rem auto' }}>
-                <h2>Admin • Cursos</h2>
-                {msg && <p style={{ color: msg.startsWith('✅') ? 'green' : 'crimson' }}>{msg}</p>}
+        <div className="admin-courses-bg">
+            <div className="admin-courses-wrap">
+                <h2 className="page-title">Admin • Cursos</h2>
+                {msg && <p className={msg.startsWith('✅') ? 'hint-ok' : 'hint-bad'}>{msg}</p>}
 
-                {/* Crear curso */}
-                <section style={{ border: '1px solid #ddd', padding: 12, borderRadius: 8, marginBottom: 16 }}>
-                    <h3>Nuevo Curso</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: 8 }}>
-                        <input placeholder="Título" value={cForm.title} onChange={e=>setCForm({ ...cForm, title: e.target.value })} />
-                        <input placeholder="Idioma (es,en,fr)" value={cForm.lang} onChange={e=>setCForm({ ...cForm, lang: e.target.value })} />
-                        <input placeholder="Nivel (A1..C2)" value={cForm.level || ''} onChange={e=>setCForm({ ...cForm, level: e.target.value })} />
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <input type="checkbox" checked={!!cForm.is_published} onChange={e=>setCForm({ ...cForm, is_published: e.target.checked })} />
-                            Publicado
-                        </label>
-                    </div>
-                    <div style={{ marginTop: 8 }}>
-                        <button onClick={createCourse}>Crear curso</button>
+                {/* === Tarjeta 1: Cursos === */}
+                <section
+                    ref={card1Ref}
+                    className={`ecard ${activeStep === 1 ? 'ecard--active' : 'ecard--collapsed'}`}
+                    key="card-courses"
+                >
+                    <div className="ecard-inner">
+                        <div
+                            className="ecard-header"
+                            role={activeStep !== 1 ? 'button' : undefined}
+                            tabIndex={activeStep !== 1 ? 0 : -1}
+                            title={activeStep !== 1 ? 'Ir a Cursos' : undefined}
+                            onClick={() => activeStep !== 1 && goToStep(1)}
+                            onKeyDown={(e) => activeStep !== 1 && (e.key === 'Enter' || e.key === ' ') && goToStep(1)}
+                        >
+                            <h3 className="ecard-title">Cursos</h3>
+                            <span className="caret" />
+                        </div>
+
+
+                        <div className="ecard-body">
+                            <div className="form-grid-course">
+                                <input className="input" placeholder="Título"
+                                       value={cForm.title} onChange={e => setCForm({ ...cForm, title: e.target.value })}/>
+                                <input className="input" placeholder="Idioma (es,en,fr)"
+                                       value={cForm.lang} onChange={e => setCForm({ ...cForm, lang: e.target.value })}/>
+                                <input className="input" placeholder="Nivel (A1..C2)"
+                                       value={cForm.level || ''} onChange={e => setCForm({ ...cForm, level: e.target.value })}/>
+                                <label className="inline-checkbox">
+                                    <input type="checkbox" checked={!!cForm.is_published}
+                                           onChange={e => setCForm({ ...cForm, is_published: e.target.checked })}/>
+                                    Publicado
+                                </label>
+                            </div>
+                            <div style={{ marginTop: 8 }}>
+                                <button className="btn glow" onClick={createCourse}>Crear curso</button>
+                            </div>
+
+                            <ul className="panel-list" style={{ marginTop: 12 }}>
+                                {courses.map(c => (
+                                    <li key={c.id}>
+                                        <button className="item-btn" onClick={() => selectCourse(c.id)}>
+                                            {c.title} ({c.lang}) {c.is_published ? '🟢' : '⚪'}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
                     </div>
                 </section>
 
-                {/* Grids */}
-                <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
-                    {/* Cursos */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 8 }}>
-                        <h3>Cursos</h3>
-                        <ul>
-                            {courses.map(c => (
-                                <li key={c.id}>
-                                    <button onClick={() => selectCourse(c.id)}>
-                                        {c.title} ({c.lang}) {c.is_published ? '🟢' : '⚪'}
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Módulos */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 8 }}>
-                        <h3>Módulos {selectedCourse ? `• ${selectedCourse.title}` : ''}</h3>
-                        {courseId && (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px', gap: 6, marginBottom: 8 }}>
-                                <input placeholder="Título módulo" value={mForm.title} onChange={e=>setMForm({ ...mForm, title: e.target.value })} />
-                                <input placeholder="Posición" type="number" value={mForm.position || 1} onChange={e=>setMForm({ ...mForm, position: Number(e.target.value) })} />
-                                <button onClick={createModule}>Crear</button>
+                {/* === Tarjeta 2: Módulos === */}
+                {courseId && (
+                    <section
+                        ref={card2Ref}
+                        className={`ecard appear ${activeStep === 2 ? 'ecard--active' : 'ecard--collapsed'}`}
+                        key={`card-modules-${courseId}`}
+                        style={{ ['--delay' as any]: '0.05s' }}
+                    >
+                        <div className="ecard-inner">
+                            <div
+                                className="ecard-header"
+                                role={activeStep > 2 ? 'button' : undefined}
+                                tabIndex={activeStep > 2 ? 0 : -1}
+                                title={activeStep > 2 ? 'Ir a Módulos' : undefined}
+                                onClick={() => activeStep > 2 && goToStep(2)}
+                                onKeyDown={(e) => activeStep > 2 && (e.key === 'Enter' || e.key === ' ') && goToStep(2)}
+                            >
+                                <h3 className="ecard-title">Módulos {selectedCourse ? `• ${selectedCourse.title}` : ''}</h3>
+                                <span className="caret" />
                             </div>
-                        )}
-                        <ul>
-                            {modules.map(m => (
-                                <li key={m.id}>
-                                    <button onClick={() => selectModule(m.id)}>{m.position}. {m.title}</button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
 
-                    {/* Lecciones */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 8 }}>
-                        <h3>Lecciones {moduleId ? `(módulo ${moduleId})` : ''}</h3>
-                        {moduleId && (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 1fr 90px', gap: 6, marginBottom: 8 }}>
-                                <input placeholder="Título lección" value={lForm.title} onChange={e=>setLForm({ ...lForm, title: e.target.value })} />
-                                <input placeholder="Posición" type="number" value={lForm.position || 1} onChange={e=>setLForm({ ...lForm, position: Number(e.target.value) })} />
-                                <input placeholder="Resumen" value={lForm.summary || ''} onChange={e=>setLForm({ ...lForm, summary: e.target.value })} />
-                                <button onClick={createLesson}>Crear</button>
-                            </div>
-                        )}
-                        <ul>
-                            {lessons.map(l => (
-                                <li key={l.id}>
-                                    <button onClick={() => selectLesson(l.id)}>{l.position}. {l.title}</button>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
 
-                    {/* Bloques */}
-                    <div style={{ border: '1px solid #ddd', borderRadius: 8, padding: 8 }}>
-                        <h3>Bloques {lessonId ? `(lección ${lessonId})` : ''}</h3>
-
-                        {lessonId && (
-                            <div style={{ display: 'grid', gap: 8, marginBottom: 10 }}>
-                                <div>
-                                    <label>Tipo</label>{' '}
-                                    <select
-                                        value={bForm.type}
-                                        onChange={e => {
-                                            const t = e.target.value as NewBlock['type'];
-                                            setBForm(prev => ({ lesson_id: lessonId, position: prev.position || 1, type: t, text: t === 'text' ? '' : undefined, media_id: undefined }));
-                                            setUploaded(null);
-                                        }}
-                                    >
-                                        <option value="text">text</option>
-                                        <option value="image">image</option>
-                                        <option value="audio">audio</option>
-                                        <option value="video">video</option>
-                                    </select>
+                            <div className="ecard-body">
+                                <div className="grid-module-form">
+                                    <input className="input" placeholder="Título módulo"
+                                           value={mForm.title} onChange={e => setMForm({ ...mForm, title: e.target.value })}/>
+                                    <input className="input" placeholder="Posición" type="number"
+                                           value={mForm.position || 1}
+                                           onChange={e => setMForm({ ...mForm, position: Number(e.target.value) })}/>
+                                    <button className="btn glow" onClick={createModule}>Crear</button>
                                 </div>
 
-                                {bForm.type === 'text' ? (
-                                    <textarea
-                                        placeholder="Contenido de texto…"
-                                        rows={3}
-                                        value={bForm.text || ''}
-                                        onChange={e => setBForm(prev => ({ ...prev, text: e.target.value }))}
-                                    />
-                                ) : (
-                                    <>
-                                        <div>
-                                            <label>Subir archivo ({bForm.type})</label>{' '}
-                                            <input
-                                                type="file"
-                                                accept={bForm.type === 'image' ? 'image/*' : `${bForm.type}/*`}
-                                                onChange={e => onUploadFile(e.target.files?.[0])}
-                                                disabled={uploading}
-                                            />
-                                        </div>
-
-                                        {uploaded?.url && (
-                                            <div style={{ marginTop: 6 }}>
-                                                {uploaded.kind === 'image' ? (
-                                                    <img src={uploaded.url} alt="preview" style={{ width: 160, borderRadius: 6 }} />
-                                                ) : uploaded.kind === 'audio' ? (
-                                                    <audio controls src={uploaded.url} />
-                                                ) : (
-                                                    <video controls width={240} src={uploaded.url} />
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div>
-                                            <label>o seleccionar existente</label>{' '}
-                                            <select
-                                                value={bForm.media_id || ''}
-                                                onChange={e => setBForm(prev => ({ ...prev, media_id: Number(e.target.value) || undefined }))}
-                                            >
-                                                <option value="">-- seleccionar --</option>
-                                                {mediaList
-                                                    .filter(m => m.kind === bForm.type)
-                                                    .map(m => <option key={m.id} value={m.id}>{m.id} • {m.url}</option>)}
-                                            </select>
-                                        </div>
-                                    </>
-                                )}
-
-                                <div>
-                                    <label>Posición</label>{' '}
-                                    <input
-                                        type="number"
-                                        value={bForm.position || 1}
-                                        onChange={e => setBForm(prev => ({ ...prev, position: Number(e.target.value) }))}
-                                        min={1}
-                                    />
-                                </div>
-
-                                <button onClick={createBlock} disabled={uploading}>
-                                    {uploading ? 'Subiendo…' : 'Crear bloque'}
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Lista de bloques */}
-                        {lessonId && (
-                            blocks.length ? (
-                                <div style={{ display: 'grid', gap: 8 }}>
-                                    {blocks.map(b => (
-                                        <div key={b.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 8 }}>
-                                            <div style={{ fontWeight: 600, marginBottom: 6 }}>
-                                                #{b.position} • {b.type.toUpperCase()}
-                                            </div>
-                                            {b.type === 'text' && <p style={{ margin: 0 }}>{b.text}</p>}
-                                            {b.type === 'image' && b.media?.url && <img src={b.media.url} alt="" style={{ maxWidth: 360, borderRadius: 6 }} />}
-                                            {b.type === 'audio' && b.media?.url && <audio controls src={b.media.url} />}
-                                            {b.type === 'video' && b.media?.url && <video controls width={360} src={b.media.url} />}
-                                        </div>
+                                <ul className="panel-list" style={{ marginTop: 12 }}>
+                                    {modules.map(m => (
+                                        <li key={m.id}>
+                                            <button className="item-btn" onClick={() => selectModule(m.id)}>
+                                                {m.position}. {m.title}
+                                            </button>
+                                        </li>
                                     ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* === Tarjeta 3: Lecciones === */}
+                {moduleId && (
+                    <section
+                        ref={card3Ref}
+                        className={`ecard appear ${activeStep === 3 ? 'ecard--active' : 'ecard--collapsed'}`}
+                        key={`card-lessons-${moduleId}`}
+                        style={{ ['--delay' as any]: '0.07s' }}
+                    >
+                        <div className="ecard-inner">
+                            <div
+                                className="ecard-header"
+                                role={activeStep > 3 ? 'button' : undefined}
+                                tabIndex={activeStep > 3 ? 0 : -1}
+                                title={activeStep > 3 ? 'Ir a Lecciones' : undefined}
+                                onClick={() => activeStep > 3 && goToStep(3)}
+                                onKeyDown={(e) => activeStep > 3 && (e.key === 'Enter' || e.key === ' ') && goToStep(3)}
+                            >
+                                <h3 className="ecard-title">Lecciones (módulo {moduleId})</h3>
+                                <span className="caret" />
+                            </div>
+
+
+                            <div className="ecard-body">
+                                <div className="grid-lesson-form">
+                                    <input className="input" placeholder="Título lección"
+                                           value={lForm.title} onChange={e => setLForm({ ...lForm, title: e.target.value })}/>
+                                    <input className="input" placeholder="Posición" type="number"
+                                           value={lForm.position || 1}
+                                           onChange={e => setLForm({ ...lForm, position: Number(e.target.value) })}/>
+                                    <input className="input" placeholder="Resumen"
+                                           value={lForm.summary || ''} onChange={e => setLForm({ ...lForm, summary: e.target.value })}/>
+                                    <button className="btn glow" onClick={createLesson}>Crear</button>
                                 </div>
-                            ) : <p>No hay bloques en esta lección.</p>
-                        )}
-                    </div>
-                </section>
+
+                                <ul className="panel-list" style={{ marginTop: 12 }}>
+                                    {lessons.map(l => (
+                                        <li key={l.id}>
+                                            <button className="item-btn" onClick={() => selectLesson(l.id)}>
+                                                {l.position}. {l.title}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {/* === Tarjeta 4: Bloques === */}
+                {lessonId && (
+                    <section
+                        ref={card4Ref}
+                        className={`ecard appear ${activeStep === 4 ? 'ecard--active' : 'ecard--collapsed'}`}
+                        key={`card-blocks-${lessonId}`}
+                        style={{ ['--delay' as any]: '0.09s' }}
+                    >
+                        <div className="ecard-inner">
+                            <div className="ecard-header">
+                                <h3 className="ecard-title">Bloques (lección {lessonId})</h3>
+                                <span className="caret" />
+                            </div>
+
+                            <div className="ecard-body">
+                                <div className="block-form">
+                                    <div className="row">
+                                        <label>Tipo</label>
+                                        <select
+                                            className="select"
+                                            value={bForm.type}
+                                            onChange={e => {
+                                                const t = e.target.value as NewBlock['type'];
+                                                setBForm(prev => ({
+                                                    lesson_id: lessonId,
+                                                    position: prev.position || 1,
+                                                    type: t,
+                                                    text: t === 'text' ? '' : undefined,
+                                                    media_id: undefined
+                                                }));
+                                                setUploaded(null);
+                                            }}
+                                        >
+                                            <option value="text">text</option>
+                                            <option value="image">image</option>
+                                            <option value="audio">audio</option>
+                                            <option value="video">video</option>
+                                        </select>
+                                    </div>
+
+                                    {bForm.type === 'text' ? (
+                                        <textarea
+                                            className="textarea"
+                                            placeholder="Contenido de texto…"
+                                            rows={4}
+                                            value={bForm.text || ''}
+                                            onChange={e => setBForm(prev => ({ ...prev, text: e.target.value }))}
+                                        />
+                                    ) : (
+                                        <>
+                                            <div className="row">
+                                                <label>Subir archivo ({bForm.type})</label>
+                                                <input
+                                                    className="input"
+                                                    type="file"
+                                                    accept={bForm.type === 'image' ? 'image/*' : `${bForm.type}/*`}
+                                                    onChange={e => onUploadFile(e.target.files?.[0])}
+                                                    disabled={uploading}
+                                                />
+                                            </div>
+
+                                            {uploaded?.url && (
+                                                <div className="block-preview">
+                                                    {uploaded.kind === 'image' ? (
+                                                        <img className="media-thumb" src={uploaded.url} alt="preview" />
+                                                    ) : uploaded.kind === 'audio' ? (
+                                                        <audio controls src={uploaded.url} />
+                                                    ) : (
+                                                        <video controls width={320} src={uploaded.url} />
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="row">
+                                                <label>o seleccionar existente</label>
+                                                <select
+                                                    className="select"
+                                                    value={(bForm as any).media_id || ''}
+                                                    onChange={e => setBForm(prev => ({ ...prev, media_id: Number(e.target.value) || undefined }))}
+                                                >
+                                                    <option value="">-- seleccionar --</option>
+                                                    {mediaList
+                                                        .filter(m => m.kind === bForm.type)
+                                                        .map(m => <option key={m.id} value={m.id}>{m.id} • {m.url}</option>)}
+                                                </select>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className="row">
+                                        <label>Posición</label>
+                                        <input
+                                            className="input"
+                                            type="number"
+                                            value={bForm.position || 1}
+                                            onChange={e => setBForm(prev => ({ ...prev, position: Number(e.target.value) }))}
+                                            min={1}
+                                        />
+                                    </div>
+
+                                    <button className="btn glow" onClick={createBlock} disabled={uploading}>
+                                        {uploading ? 'Subiendo…' : 'Crear bloque'}
+                                    </button>
+                                </div>
+
+                                {lessonId && (
+                                    blocks.length ? (
+                                        <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                                            {blocks.map(b => (
+                                                <div key={b.id} className="block-card">
+                                                    <div style={{ fontWeight: 700, marginBottom: 6 }}>
+                                                        #{b.position} • {b.type.toUpperCase()}
+                                                    </div>
+                                                    {b.type === 'text' && <p style={{ margin: 0 }}>{b.text}</p>}
+                                                    {b.type === 'image' && b.media?.url && <img className="media-thumb" src={b.media.url} alt="" />}
+                                                    {b.type === 'audio' && b.media?.url && <audio controls src={b.media.url} />}
+                                                    {b.type === 'video' && b.media?.url && <video controls width={360} src={b.media.url} />}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : <p className="muted">No hay bloques en esta lección.</p>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+                )}
             </div>
         </div>
     );
