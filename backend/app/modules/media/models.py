@@ -1,4 +1,4 @@
-from sqlalchemy import String, Integer, Text
+from sqlalchemy import String, Integer, Text, UniqueConstraint, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import JSONB
 from app.db.base import Base
@@ -9,3 +9,7 @@ class MediaAsset(Base):
     url: Mapped[str] = mapped_column(Text, nullable=False)     # URL pública o presign
     kind: Mapped[str] = mapped_column(String(10))     # audio|video|image
     meta: Mapped[dict] = mapped_column(JSONB, default=dict)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
+    )

@@ -86,6 +86,28 @@ export type Progress = {
     best_score: number;
     last_attempt_at?: string | null;
 };
+// api.ts
+export type ProgressOut = {
+    user_id: number;
+    lesson_id: number;
+    completed: boolean;
+    best_score: number;
+    last_attempt_at?: string | null;
+};
+
+export type XpEventOut = {
+    id: number;
+    user_id: number;
+    source: string;
+    delta: number;
+};
+
+export type AdvanceResponse = {
+    progress: ProgressOut;
+    xp: XpEventOut;
+};
+
+
 export type Streak = { user_id: number; current_days: number; longest_days: number; last_day?: string | null };
 
 /** ---------- Types comunidad/perfiles ---------- */
@@ -172,6 +194,8 @@ export const endpoints = {
     // progress
     myProgress: () => `${Api}/progress/me`,
     upsertProgress: () => `${Api}/progress/upsert`,
+    progressAdvance: () => `${Api}/progress/advance`,
+    myCoursesProgress: () => `${Api}/progress/my-courses`,
     addXp: () => `${Api}/progress/xp`,
     streakMe: () => `${Api}/progress/streak/me`,
     // community

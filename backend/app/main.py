@@ -13,6 +13,9 @@ from app.modules.progress.endpoints import router as progress_router
 from app.modules.community.endpoints import router as community_router
 from app.modules.feedback.endpoints import router as feedback_router
 from app.modules.admin.admin_metrics import router as admin_router
+from app.modules.progress.routes_extra import router as progress_extra_router
+from app.modules.progress.routes_summary import router as routes_summary_router
+
 
 class TimeoutMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -52,3 +55,5 @@ app.include_router(progress_router, prefix=settings.API_V1_PREFIX)
 app.include_router(community_router, prefix=settings.API_V1_PREFIX)
 app.include_router(feedback_router, prefix=settings.API_V1_PREFIX)
 app.include_router(admin_router, prefix=settings.API_V1_PREFIX)
+app.include_router(progress_extra_router, prefix=settings.API_V1_PREFIX)
+app.include_router(routes_summary_router, prefix=settings.API_V1_PREFIX)

@@ -6,6 +6,7 @@ import {
     type Progress, type Streak, type Attempt, type Course
 } from '../api';
 import '../css/dashboardUser.css';
+import {Link} from "react-router-dom";
 
 type Summary = {
     lessonsCompleted: number;
@@ -69,20 +70,51 @@ export default function DashboardUser() {
         return { lessonsCompleted, bestScore, lastActivityAt, totalLessonsTracked, completionRate };
     }, [progress, attempts]);
 
-    // Actividad reciente: ordenar por intento más nuevo (si el backend no lo hace)
-    const recentActivity = useMemo(() => {
-        const byTime = [...(attempts || [])].sort((a, b) => {
-            const ta = new Date(a.submitted ?? 0).getTime();
-            const tb = new Date(b.submitted ?? 0).getTime();
-            return tb - ta;
-        }).slice(0, 8);
-        return byTime;
-    }, [attempts]);
 
     // Recomendaciones simples: cursos publicados ordenados por id (placeholder)
     const recommended = useMemo(() => {
         return (courses || []).filter(c => c.is_published).slice(0, 4);
     }, [courses]);
+    // Preferimos attempts si existen; si no, caemos a progreso por last_attempt_at
+    const recentActivity = useMemo(() => {
+        if ((attempts?.length ?? 0) > 0) {
+            return [...attempts].sort((a, b) => {
+                const ta = new Date(a.submitted ?? 0).getTime();
+                const tb = new Date(b.submitted ?? 0).getTime();
+                return tb - ta;
+            }).slice(0, 8).map(a => ({
+                kind: 'attempt' as const,
+                id: a.id,
+                exercise_id: a.exercise_id,
+                score: a.score,
+                is_correct: a.is_correct,
+                duration_ms: a.duration_ms,
+                when: a.submitted ? new Date(a.submitted).toISOString() : null,
+                label: `Intento #${a.exercise_id}`,
+            }));
+        }
+
+        // Sin attempts, usamos progreso
+        const rows = (progress || [])
+            .filter(p => p.last_attempt_at) // solo los que tengan marca temporal
+            .sort((a, b) => {
+                const ta = new Date(a.last_attempt_at as any).getTime();
+                const tb = new Date(b.last_attempt_at as any).getTime();
+                return tb - ta;
+            })
+            .slice(0, 8)
+            .map(p => ({
+                kind: 'progress' as const,
+                id: `${p.user_id}-${p.lesson_id}`,
+                lesson_id: p.lesson_id,
+                completed: p.completed,
+                best_score: p.best_score,
+                when: p.last_attempt_at ? new Date(p.last_attempt_at).toISOString() : null,
+                label: `Lección #${p.lesson_id}`,
+            }));
+
+        return rows;
+    }, [attempts, progress]);
 
     return (
         <div className="userdash-bg">
@@ -180,7 +212,7 @@ export default function DashboardUser() {
                     <div className="e-inner">
                         <div className="section-header">
                             <h3>Actividad reciente</h3>
-                            <span className="muted">{recentActivity.length} últimos envíos</span>
+                            <span className="muted">{recentActivity.length} últimos eventos</span>
                         </div>
 
                         {loading ? (
@@ -192,20 +224,34 @@ export default function DashboardUser() {
                                 <table className="electric-table">
                                     <thead>
                                     <tr>
-                                        <th>Cuestionario</th>
+                                        <th>Tipo</th>
+                                        <th>Descripción</th>
                                         <th>Resultado</th>
-                                        <th>Tiempo</th>
                                         <th>Fecha</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {recentActivity.map(a => (
-                                        <tr key={a.id}>
-                                            <td className="td-title">#{a.exercise_id}</td>
-                                            <td>{a.score}{typeof a.is_correct === 'boolean' ? (a.is_correct ? ' ✅' : ' ❌') : ''}</td>
-                                            <td className="muted">{a.duration_ms} ms</td>
-                                            <td className="muted">{a.submitted ? new Date(a.submitted).toLocaleString() : '—'}</td>
-                                        </tr>
+                                    {recentActivity.map(row => (
+                                        row.kind === 'attempt' ? (
+                                            <tr key={`a-${row.id}`}>
+                                                <td>Intento</td>
+                                                <td className="td-title">{row.label}</td>
+                                                <td>
+                                                    {row.score}
+                                                    {typeof row.is_correct === 'boolean' ? (row.is_correct ? ' ✅' : ' ❌') : ''}
+                                                </td>
+                                                <td className="muted">{row.when ? new Date(row.when).toLocaleString() : '—'}</td>
+                                            </tr>
+                                        ) : (
+                                            <tr key={`p-${row.id}`}>
+                                                <td>Progreso</td>
+                                                <td className="td-title">{row.label}</td>
+                                                <td>
+                                                    {row.completed ? 'Completada ✅' : `Mejor: ${row.best_score}`}
+                                                </td>
+                                                <td className="muted">{row.when ? new Date(row.when).toLocaleString() : '—'}</td>
+                                            </tr>
+                                        )
                                     ))}
                                     </tbody>
                                 </table>
@@ -215,6 +261,7 @@ export default function DashboardUser() {
                         )}
                     </div>
                 </section>
+
 
                 {/* ===== Recomendados ===== */}
                 <section className="e-card">
@@ -227,14 +274,15 @@ export default function DashboardUser() {
                         {recommended.length ? (
                             <div className="grid-reco">
                                 {recommended.map(c => (
-                                    <a key={c.id} className="reco-card" href={`/courses?focus=${c.id}`} title={c.title}>
+                                    <Link className="reco-card" to="/courses?focus=1">
                                         <div className="reco-title">{c.title}</div>
                                         <div className="reco-meta">
                                             <span>{c.lang.toUpperCase()}</span>
                                             {c.level && <span> • {c.level}</span>}
                                             {c.is_published ? <span className="pill-ok">Publicado</span> : <span className="pill-mute">Borrador</span>}
+
                                         </div>
-                                    </a>
+                                    </Link>
                                 ))}
                             </div>
                         ) : (

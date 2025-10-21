@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { endpoints, type Course, type Module, type Lesson, type Block } from '../api';
+import {endpoints, type Course, type Module, type Lesson, type Block} from '../api';
 import { useApi } from '../hooks/useApi';
 import '../css/courses.css';
 
@@ -256,6 +256,48 @@ export default function Courses() {
                         ) : (
                             <p className="muted">Selecciona una lección para ver sus bloques.</p>
                         )}
+                        {selectedLesson && (
+                            <div className="lesson-complete-row">
+                                <button
+                                    className="btn glow"
+                                    onClick={async () => {
+                                        try {
+                                            setMsg('');
+                                            await call(endpoints.upsertProgress(), {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    lesson_id: selectedLesson,
+                                                    completed: true,
+                                                    best_score: 100,
+                                                }),
+                                            });
+
+                                            await call(endpoints.addXp(), {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    source: 'lesson_complete',
+                                                    delta: 50,
+                                                }),
+                                            });
+
+                                            setMsg('✅ Lección completada • +50 XP');
+                                        } catch (e: unknown) {
+                                            let m = 'Error desconocido';
+                                            if (e instanceof Error) m = e.message;
+                                            else if (typeof e === 'object' && e && 'detail' in e)
+                                                m = String((e as any).detail);
+                                            setMsg(m);
+                                        }
+                                    }}
+                                >
+                                    ✅ Marcar como completada
+                                </button>
+                            </div>
+                        )}
+
+
                     </div>
                 </section>
             </div>

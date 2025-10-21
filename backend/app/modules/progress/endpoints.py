@@ -25,10 +25,10 @@ def add_xp(payload: XpEventCreate, db: Session = Depends(get_db), current_user=D
     crud_badge.maybe_award(db, current_user.id)
     return e
 
-@router.post("/badges", response_model=BadgeOut, dependencies=[Depends(requires("streak:read:self"))])
+@router.post("/badges", response_model=BadgeOut, dependencies=[Depends(requires("badges:create"))])
 def create_badge(payload: BadgeCreate, db: Session = Depends(get_db), _=Depends(require_admin)):
     return crud_badge.create(db, payload)
 
-@router.get("/streak/me", response_model=StreakOut, dependencies=[Depends(requires("badges:create"))])
+@router.get("/streak/me", response_model=StreakOut, dependencies=[Depends(requires("streak:read:self"))])
 def my_streak(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     return crud_streak.touch(db, current_user.id)

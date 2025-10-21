@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from app.db.base import Base
@@ -11,6 +11,10 @@ class Exercise(Base):
     prompt: Mapped[dict] = mapped_column(JSONB, default=dict)
     answer: Mapped[dict] = mapped_column(JSONB, default=dict)
     config: Mapped[dict] = mapped_column(JSONB, default=dict)
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
+    )
 
 class Attempt(Base):
     __tablename__ = "attempts"
@@ -24,3 +28,7 @@ class Attempt(Base):
     duration_ms: Mapped[int] = mapped_column(Integer, default=0)
 
     exercise = relationship("Exercise")
+    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
+    )
