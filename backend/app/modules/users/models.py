@@ -14,7 +14,7 @@ class User(Base):
 
     role: Mapped[str] = mapped_column(String(20), nullable=False, default="user", server_default="user")
 
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
-    )
+    #tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+    #__table_args__ = (
+    #    UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
+    #)

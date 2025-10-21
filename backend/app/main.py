@@ -40,7 +40,7 @@ app.add_middleware(
     allow_origins=ALLOWED,      # 👈 NO "*"
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*", "X-Tenant"],
 )
 
 app.add_middleware(TimeoutMiddleware)

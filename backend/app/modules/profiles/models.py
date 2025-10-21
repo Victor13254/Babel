@@ -17,7 +17,5 @@ class Profile(Base):
     created_at: Mapped["DateTime"] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", backref="profile", uselist=False)
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
-    )
+    #tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+

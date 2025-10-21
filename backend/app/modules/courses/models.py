@@ -12,10 +12,7 @@ class Course(Base):
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
 
     modules = relationship("Module", back_populates="course", cascade="all, delete")
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
-    )
+    #tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
 
 class Module(Base):
     __tablename__ = "modules"
@@ -26,10 +23,7 @@ class Module(Base):
 
     course = relationship("Course", back_populates="modules")
     lessons = relationship("Lesson", back_populates="module", cascade="all, delete")
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
-    )
+    #tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
 
 class Lesson(Base):
     __tablename__ = "lessons"
@@ -41,10 +35,8 @@ class Lesson(Base):
 
     module = relationship("Module", back_populates="lessons")
     blocks = relationship("LessonBlock", back_populates="lesson", cascade="all, delete")
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
-    )
+    #tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+
 
 class LessonBlock(Base):
     __tablename__ = "lesson_blocks"
@@ -58,7 +50,5 @@ class LessonBlock(Base):
 
     lesson = relationship("Lesson", back_populates="blocks")
     media = relationship("MediaAsset", lazy="joined")
-    tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
-    __table_args__ = (
-        UniqueConstraint("tenant_id", "email", name="uq_user_tenant_email"),
-    )
+    #tenant_id: Mapped[int] = mapped_column(ForeignKey("tenants.id"), index=True)
+
