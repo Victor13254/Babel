@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
 
     API_V1_PREFIX: str = "/api"
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] | List[str] = ["http://localhost:5173"]
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] | List[str] = ["https://ec2-3-236-245-186.compute-1.amazonaws.com"]
 
 
     SECRET_KEY: str
